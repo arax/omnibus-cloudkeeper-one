@@ -1,0 +1,38 @@
+#!/bin/bash
+#
+# Perform necessary cloudkeeper-one removal steps
+# after package is uninstalled.
+#
+
+PROGNAME=$(basename $0)
+INSTALLER_DIR=`dirname $0`
+DEST_DIR=/opt/cloudkeeper-one
+CONFIG_DIR=/etc/cloudkeeper-one
+BIN_DIR=/usr/bin
+CRON_DIR=/etc/cron.d
+INIT_DIR=/etc/init.d
+
+function error_exit
+{
+  echo "${PROGNAME}: ${1:-"Unknown Error"}" 1>&2
+  exit 1
+}
+
+if [ "X$1" = "Xupgrade" ] || [ "X$1" = "X1" ]; then
+  echo "Skipping clean-up, this is an upgrade!"
+  exit 0
+fi
+
+# clean up init scripts
+if [ -f "$INIT_DIR/cloudkeeper-one" ]; then
+  rm $INIT_DIR/cloudkeeper-one
+fi
+
+# clean up links
+if [ -L "$BIN_DIR/cloudkeeper-one" ]; then
+  rm $BIN_DIR/cloudkeeper-one
+fi
+
+echo "cloudkeeper-one has been uninstalled!"
+
+exit 0

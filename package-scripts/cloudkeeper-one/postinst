@@ -1,0 +1,89 @@
+#!/bin/bash
+#
+# Perform necessary cloudkeeper-one setup steps
+# after package is installed.
+#
+
+PROGNAME=$(basename $0)
+INSTALLER_DIR=`dirname $0`
+DEST_DIR=/opt/cloudkeeper-one
+CONFIG_DIR=/etc/cloudkeeper-one
+BIN_DIR=/usr/bin
+CRON_DIR=/etc/cron.d
+INIT_DIR=/etc/init.d
+
+RUN_DIR=/var/run/cloudkeeper-one
+LOG_DIR=/var/log/cloudkeeper-one
+SPOOL_DIR=/var/spool/cloudkeeper-one
+LOCK_DIR=/var/lock/cloudkeeper-one
+
+CLOUDKEEPER_ONE_CONFIG_FILE=$CONFIG_DIR/cloudkeeper-one.yml
+CLOUDKEEPER_ONE_CONFIG_TPL_DIR=$CONFIG_DIR/templates/
+CLOUDKEEPER_ONE_APPLS_DIR=$SPOOL_DIR/appliances/
+
+RUBY_VERSION=2.2.0
+CLOUDKEEPER_ONE_VERSION=1.0.1
+
+EMBEDDED_GEM_ROOT=$DEST_DIR/embedded/lib/ruby/gems/$RUBY_VERSION/gems/cloudkeeper-one-$CLOUDKEEPER_ONE_VERSION
+
+function error_exit
+{
+  echo "${PROGNAME}: ${1:-"Unknown Error"}" 1>&2
+  exit 1
+}
+
+# chown
+chown -R root:root $DEST_DIR || error_exit "Cannot chown $DEST_DIR to root:root"
+
+# create the cloudkeeper-one user
+id -u cloudkeeper-one > /dev/null 2>&1
+if [ "$?" -ne "0" ]; then
+  useradd --system --shell /bin/false --home $SPOOL_DIR --create-home cloudkeeper-one || error_exit "Cannot create the cloudkeeper-one user account"
+  usermod -L cloudkeeper-one || error_exit "Cannot lock the cloudkeeper-one user account"
+fi
+
+# prepare runtime dirs
+mkdir -p $RUN_DIR || error_exit "Cannot create $RUN_DIR"
+chown cloudkeeper-one:cloudkeeper-one $RUN_DIR || error_exit "Cannot chown $RUN_DIR to cloudkeeper-one:cloudkeeper-one"
+
+mkdir -p $LOG_DIR || error_exit "Cannot create $LOG_DIR"
+chown cloudkeeper-one:cloudkeeper-one $LOG_DIR || error_exit "Cannot chown $LOG_DIR to cloudkeeper-one:cloudkeeper-one"
+
+mkdir -p $CLOUDKEEPER_ONE_APPLS_DIR || error_exit "Cannot create $CLOUDKEEPER_ONE_APPLS_DIR"
+chown -R cloudkeeper-one:cloudkeeper-one $SPOOL_DIR || error_exit "Cannot chown $SPOOL_DIR to cloudkeeper-one:cloudkeeper-one"
+
+mkdir -p $LOCK_DIR || error_exit "Cannot create $LOCK_DIR"
+chown cloudkeeper-one:cloudkeeper-one $LOCK_DIR || error_exit "Cannot chown $LOCK_DIR to cloudkeeper-one:cloudkeeper-one"
+
+# prepare configuration dir
+mkdir -p $CONFIG_DIR || error_exit "Cannot create $CONFIG_DIR"
+chown root:root $CONFIG_DIR || error_exit "Cannot chown $CONFIG_DIR to root:root"
+
+CLOUDKEEPER_ONE_CONFIG_FILE_DEST=$CLOUDKEEPER_ONE_CONFIG_FILE
+if [ -f "$CLOUDKEEPER_ONE_CONFIG_FILE" ]; then
+  CLOUDKEEPER_ONE_CONFIG_FILE_DEST=$CLOUDKEEPER_ONE_CONFIG_FILE.new
+fi
+cp $EMBEDDED_GEM_ROOT/config/cloudkeeper-one.yml $CLOUDKEEPER_ONE_CONFIG_FILE_DEST || error_exit "Cannot create $CLOUDKEEPER_ONE_CONFIG_FILE_DEST"
+
+if [ ! -d "$CLOUDKEEPER_ONE_CONFIG_TPL_DIR" ]; then
+  mkdir -p $CLOUDKEEPER_ONE_CONFIG_TPL_DIR || error_exit "Cannot create $CLOUDKEEPER_ONE_CONFIG_TPL_DIR"
+  cp $EMBEDDED_GEM_ROOT/config/templates/*.erb $CLOUDKEEPER_ONE_CONFIG_TPL_DIR || error_exit "Cannot copy default templates to $CLOUDKEEPER_ONE_CONFIG_TPL_DIR"
+fi
+
+# symlink bin files into $BIN_DIR
+ln -sf $DEST_DIR/bin/cloudkeeper-one $BIN_DIR || error_exit "Cannot link cloudkeeper-one to $BIN_DIR"
+
+# set up init scripts
+if [ -d "$INIT_DIR" ]; then
+  cp $EMBEDDED_GEM_ROOT/examples/etc/init.d/cloudkeeper-one $INIT_DIR || error_exit "Cannot register cloudkeeper-one in $INIT_DIR"
+fi
+
+# change configuration defaults
+sed -i "s/\/cloudkeeper\//\/cloudkeeper\-one\//g" $CLOUDKEEPER_ONE_CONFIG_FILE_DEST || error_exit "Could not adapt $CLOUDKEEPER_ONE_CONFIG_FILE_DEST to local configuration"
+
+CLOUDKEEPER_ONE_CONFIG_TPL_DIR_ESCAPED=$(echo "$CLOUDKEEPER_ONE_CONFIG_TPL_DIR" | sed -e 's/[\/&]/\\&/g')
+sed -i "s/template\-dir\: \#/template\-dir\: $CLOUDKEEPER_ONE_CONFIG_TPL_DIR_ESCAPED/g" $CLOUDKEEPER_ONE_CONFIG_FILE_DEST || error_exit "Could not adapt $CLOUDKEEPER_ONE_CONFIG_FILE_DEST to local configuration"
+
+echo "Thank you for installing cloudkeeper-one!"
+
+exit 0
