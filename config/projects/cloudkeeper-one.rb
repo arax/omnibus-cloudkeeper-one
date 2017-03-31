@@ -6,7 +6,7 @@ homepage 'https://github.com/the-cloudkeeper-project/cloudkeeper-one'
 description 'Synchronize cloud appliances between cloudkeeper and OpenNebula.'
 
 install_dir     '/opt/cloudkeeper-one'
-build_version   "1.1.1"
+build_version   "1.1.2"
 build_iteration 1
 
 override :rubygems, :version => '2.6.8'
