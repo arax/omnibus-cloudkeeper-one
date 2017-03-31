@@ -36,10 +36,22 @@ function error_exit
 chown -R root:root $DEST_DIR || error_exit "Cannot chown $DEST_DIR to root:root"
 
 # create the cloudkeeper-one user
+id -g cloudkeeper > /dev/null 2>&1
+if [ "$?" -ne "0" ]; then
+  groupadd --system cloudkeeper || error_exit "Cannot create the cloudkeeper group"
+fi
+
 id -u cloudkeeper-one > /dev/null 2>&1
 if [ "$?" -ne "0" ]; then
   useradd --system --shell /bin/false --home $SPOOL_DIR --create-home cloudkeeper-one || error_exit "Cannot create the cloudkeeper-one user account"
   usermod -L cloudkeeper-one || error_exit "Cannot lock the cloudkeeper-one user account"
+  usermod -a -G cloudkeeper cloudkeeper-one || error_exit "Cannot add the cloudkeeper-one user account to the cloudkeeper group"
+fi
+
+# attempt integration with ONe
+id -u oneadmin > /dev/null 2>&1
+if [ "$?" -eq "0" ]; then
+  usermod -a -G cloudkeeper,cloudkeeper-one oneadmin || error_exit "Cannot add the oneadmin user account to the cloudkeeper/cloudkeeper-one group"
 fi
 
 # prepare runtime dirs
