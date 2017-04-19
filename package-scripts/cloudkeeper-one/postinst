@@ -18,6 +18,7 @@ SPOOL_DIR=/var/spool/cloudkeeper-one
 LOCK_DIR=/var/lock/cloudkeeper-one
 
 CLOUDKEEPER_ONE_CONFIG_FILE=$CONFIG_DIR/cloudkeeper-one.yml
+CLOUDKEEPER_ONE_CONFIG_FILE_MOD=440
 CLOUDKEEPER_ONE_CONFIG_TPL_DIR=$CONFIG_DIR/templates/
 CLOUDKEEPER_ONE_APPLS_DIR=$SPOOL_DIR/appliances/
 
@@ -64,10 +65,14 @@ if [ -f "$CLOUDKEEPER_ONE_CONFIG_FILE" ]; then
   CLOUDKEEPER_ONE_CONFIG_FILE_DEST=$CLOUDKEEPER_ONE_CONFIG_FILE.new
 fi
 cp $EMBEDDED_GEM_ROOT/config/cloudkeeper-one.yml $CLOUDKEEPER_ONE_CONFIG_FILE_DEST || error_exit "Cannot create $CLOUDKEEPER_ONE_CONFIG_FILE_DEST"
+chown cloudkeeper-one:cloudkeeper-one $CLOUDKEEPER_ONE_CONFIG_FILE_DEST || error_exit "Cannot chown $CLOUDKEEPER_ONE_CONFIG_FILE_DEST to cloudkeeper-one:cloudkeeper-one"
+chmod $CLOUDKEEPER_ONE_CONFIG_FILE_MOD $CLOUDKEEPER_ONE_CONFIG_FILE_DEST || error_exit "Cannot chmod $CLOUDKEEPER_ONE_CONFIG_FILE_DEST to $CLOUDKEEPER_ONE_CONFIG_FILE_MOD"
 
 if [ ! -d "$CLOUDKEEPER_ONE_CONFIG_TPL_DIR" ]; then
   mkdir -p $CLOUDKEEPER_ONE_CONFIG_TPL_DIR || error_exit "Cannot create $CLOUDKEEPER_ONE_CONFIG_TPL_DIR"
   cp $EMBEDDED_GEM_ROOT/config/templates/*.erb $CLOUDKEEPER_ONE_CONFIG_TPL_DIR || error_exit "Cannot copy default templates to $CLOUDKEEPER_ONE_CONFIG_TPL_DIR"
+  chown -R cloudkeeper-one:cloudkeeper-one $CLOUDKEEPER_ONE_CONFIG_TPL_DIR || error_exit "Cannot chown $CLOUDKEEPER_ONE_CONFIG_TPL_DIR to cloudkeeper-one:cloudkeeper-one"
+  chmod -R $CLOUDKEEPER_ONE_CONFIG_FILE_MOD $CLOUDKEEPER_ONE_CONFIG_TPL_DIR || error_exit "Cannot chmod $CLOUDKEEPER_ONE_CONFIG_TPL_DIR to $CLOUDKEEPER_ONE_CONFIG_FILE_MOD"
 fi
 
 # symlink bin files into $BIN_DIR
