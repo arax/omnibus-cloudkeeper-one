@@ -1,18 +1,16 @@
-require 'facter'
-
 name 'cloudkeeper-one'
 maintainer 'Boris Parak <parak@cesnet.cz>'
 homepage 'https://github.com/the-cloudkeeper-project/cloudkeeper-one'
 description 'Synchronize cloud appliances between cloudkeeper and OpenNebula.'
 
 install_dir     '/opt/cloudkeeper-one'
-build_version   "1.2.5"
+build_version   "1.3.0"
 build_iteration 1
 
 override :rubygems, :version => '2.6.8'
 ## WARN: do not forget to change RUBY_VERSION in the postinst script
 ##       when switching to a new minor version
-override :ruby, :version => '2.2.6'
+override :ruby, :version => '2.2.8'
 
 # creates required build directories
 dependency 'preparation'

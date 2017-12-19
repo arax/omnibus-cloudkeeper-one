@@ -18,19 +18,16 @@ function error_exit
   exit 1
 }
 
-if [ "X$1" = "Xupgrade" ] || [ "X$1" = "X1" ]; then
-  echo "Skipping clean-up, this is an upgrade!"
-  exit 0
-fi
+if [ "X$1" = "Xpurge" ] || [ "X$1" = "X0" ]; then
+  # clean up init scripts
+  if [ -f "$INIT_DIR/cloudkeeper-one" ]; then
+    rm $INIT_DIR/cloudkeeper-one
+  fi
 
-# clean up init scripts
-if [ -f "$INIT_DIR/cloudkeeper-one" ]; then
-  rm $INIT_DIR/cloudkeeper-one
-fi
-
-# clean up links
-if [ -L "$BIN_DIR/cloudkeeper-one" ]; then
-  rm $BIN_DIR/cloudkeeper-one
+  # clean up links
+  if [ -L "$BIN_DIR/cloudkeeper-one" ]; then
+    rm $BIN_DIR/cloudkeeper-one
+  fi
 fi
 
 echo "cloudkeeper-one has been uninstalled!"
