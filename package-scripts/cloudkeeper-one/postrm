@@ -7,10 +7,13 @@
 PROGNAME=$(basename $0)
 INSTALLER_DIR=`dirname $0`
 
+SYSD_DIR="/etc/systemd/system"
+BIN_DIR="/usr/bin"
+
 DEST_DIR="/opt/cloudkeeper-one"
 CONFIG_DIR="/etc/cloudkeeper-one"
 LOG_DIR="/var/log/cloudkeeper-one"
-BIN_DIR="/usr/bin"
+SPOOL_DIR="/var/spool/cloudkeeper-one"
 
 function error_exit
 {
@@ -40,6 +43,7 @@ if [ "X$1" = "Xpurge" ] || [ "X$1" = "X0" ]; then
   remdir "$DEST_DIR"
   remdir "$CONFIG_DIR"
   remdir "$LOG_DIR"
+  remdir "$SPOOL_DIR"
 fi
 
 echo "cloudkeeper-one has been uninstalled!"
