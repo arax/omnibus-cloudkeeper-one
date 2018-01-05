@@ -13,7 +13,12 @@ env = {
 }
 
 build do
+  gem "install xmlrpc -n #{install_dir}/bin --no-rdoc --no-ri", :env => env
   gem "install cloudkeeper-one -n #{install_dir}/bin --no-rdoc --no-ri -v #{version}", :env => env
+
+  mkdir "#{install_dir}/examples/"
+  copy File.join(project.files_path, '*'), "#{install_dir}/examples/"
+
   delete "#{install_dir}/embedded/docs"
   delete "#{install_dir}/embedded/share/man"
   delete "#{install_dir}/embedded/share/doc"

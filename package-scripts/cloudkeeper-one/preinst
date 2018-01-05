@@ -4,4 +4,17 @@
 # before package is installed.
 #
 
+INIT_DIR=/etc/init.d
+
+function error_exit
+{
+  echo "${PROGNAME}: ${1:-"Unknown Error"}" 1>&2
+  exit 1
+}
+
+# clean up init scripts
+if [ -f "$INIT_DIR/cloudkeeper-one" ]; then
+  rm "$INIT_DIR/cloudkeeper-one"
+fi
+
 echo "You're about to install cloudkeeper-one!"

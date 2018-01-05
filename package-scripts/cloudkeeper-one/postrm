@@ -6,11 +6,11 @@
 
 PROGNAME=$(basename $0)
 INSTALLER_DIR=`dirname $0`
-DEST_DIR=/opt/cloudkeeper-one
-CONFIG_DIR=/etc/cloudkeeper-one
-BIN_DIR=/usr/bin
-CRON_DIR=/etc/cron.d
-INIT_DIR=/etc/init.d
+
+DEST_DIR="/opt/cloudkeeper-one"
+CONFIG_DIR="/etc/cloudkeeper-one"
+LOG_DIR="/var/log/cloudkeeper-one"
+BIN_DIR="/usr/bin"
 
 function error_exit
 {
@@ -18,16 +18,28 @@ function error_exit
   exit 1
 }
 
-if [ "X$1" = "Xpurge" ] || [ "X$1" = "X0" ]; then
-  # clean up init scripts
-  if [ -f "$INIT_DIR/cloudkeeper-one" ]; then
-    rm $INIT_DIR/cloudkeeper-one
+function remdir
+{
+  if [ -d "$1" ]; then
+    rm -rf "$1" || error_exit "Could not unlink $1"
   fi
+}
+
+if [ "X$1" = "Xpurge" ] || [ "X$1" = "X0" ]; then
+  # clean up systemd integration
+  for SD_FILE in ${SYSD_DIR}/cloudkeeper-one.* ; do
+    rm "$SD_FILE" || error_exit "Could not unlink $SD_FILE"
+  done
 
   # clean up links
   if [ -L "$BIN_DIR/cloudkeeper-one" ]; then
-    rm $BIN_DIR/cloudkeeper-one
+    rm "$BIN_DIR/cloudkeeper-one"
   fi
+
+  # clean up runtime directories
+  remdir "$DEST_DIR"
+  remdir "$CONFIG_DIR"
+  remdir "$LOG_DIR"
 fi
 
 echo "cloudkeeper-one has been uninstalled!"
